@@ -51,9 +51,9 @@
   <script src="js/geojson-vt.js"></script>
   <script src="js/L.CanvasTiles.js"></script>
   <script src="data/parcels.json"></script>
-  <!--<script src="data/zoning.geojson"></script>
-  <script src="data/floodplains.geojson"></script>
-  <script src="data/muni.geojson"></script>
+  <script src="data/town.geojson"></script>
+  <script src="data/zoning.geojson"></script>
+  <!-- <script src="data/floodplains.geojson"></script>
   <script src="data/wetlands.geojson"></script>
   <script src="data/buildingfootprints2007.geojson"></script>
   <script src="data/addresspoints.geojson"></script>
@@ -103,7 +103,7 @@
         <hr />
       </div>
       <script>
-      // toggle toolbar on/off
+      // toggle toolbar visible/invisible
         $("#showTools").click(function () {
           $(".toolLegend").toggle();
           $("#showTools").toggle();
@@ -134,8 +134,172 @@
 
 	var measureControl = L.control.measure({position: 'bottomright'});
 	measureControl.addTo(map);
-  </body>
 
+  //remove existing attribution control by hiding it only on mobile
+  //make sure the normal control is hidden
+  var style = document.createElement('style');
+  style.type = 'text/css';
+  style.innerHTML = '.leaflet-control-attribution {display: none;};@media screen and (max-width:768px) {.elevation.leaflet-control {display:none}}';
+  document.getElementsByTagName('head')[0].appendChild(style);
+
+  if (L.Browser.mobile) {
+
+    var toggleAttribution = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function (map) {
+        this._div = L.DomUtil.create('button', 'btn btn-link');
+        this._div.innerHTML = "Leaflet | Map Tiles";
+        L.DomEvent.on(this._div, 'click', this._click);
+        return this._div;
+      },
+
+      _click: function (e) {
+        L.DomEvent.stop(e);
+        x = document.getElementsByClassName("leaflet-control-attribution")[0];
+        x.style.display = x.style.display === 'block' ? '' : 'block';
+      },
+
+    });
+    map.addControl(new toggleAttribution());
+  } else {
+    x = document.getElementsByClassName("leaflet-control-attribution")[0];
+    x.style.display = x.style.display === 'block' ? '' : 'block';
+  }
+
+// begin with map tiles //
+
+var theScale = L.control.scale({ metric: false, imperial: true }).addTo(map);
+
+var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxNativeZoom: 19,
+  maxZoom: 22,
+  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+});
+
+var osmhot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
+});
+
+var stamentoner = new L.tileLayer.provider('Stamen.Toner');
+var stamentonerlight = new L.tileLayer.provider('Stamen.TonerLite');
+var watercolor = L.tileLayer('//stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.png', {
+  attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  subdomains: 'abcd',
+  maxNativeZoom: 14,
+  maxZoom: 17,
+  ext: 'png',
+});
+var esrigray = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+  maxNativeZoom: 16,
+  maxZoom: 19,
+});
+var esritopo = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
+  maxZoom: 22,
+  maxNativeZoom: 18,
+});
+
+// container for base layers
+var baseLayers = [
+  {
+    active: true,
+    name: "Open Street Map",
+    layer: L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+  },
+  {
+    active: false,
+    name: "Satellite",
+    layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
+  },
+  {
+    active: false,
+    name: "Topography",
+    layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}')
+  }
+];
+
+// layer styling //
+
+var muniStyle = {
+  "color": "#000",
+  "weight": 2,
+  "opacity": 1,
+  fillOpacity: 0
+};
+var floodplainStyle = {
+  "color": "#178eef",
+  "weight": 2,
+  "opacity": 0.65,
+  fillOpacity: 0.5,
+  fillColor: '#abd3f4'
+};
+var wetlandsStyle = {
+  "color": "#78808c",
+  "weight": 1,
+  "opacity": 0.65,
+  fillOpacity: 0.5,
+  fillColor: '#adafb2',
+  fillRule: 'evenodd'
+};
+var addressptsStyle = {
+  "color": "#37c132",
+  "weight": 1,
+  "opacity": 0.65
+};
+var buildingsStyle = {
+  "color": "#c17e32",
+  "weight": 1,
+  "opacity": 0.65,
+  fillOpacity: 0.5,
+  fillColor: '#f4c997'
+};
+var overLayers = [
+  {
+    active: false,
+    name: "Zoning",
+    layer: L.geoJson(zoning, {
+      style: function(feature) {
+        return {
+          weight: 2,
+          opacity: 1,
+          color: 'white',
+          dashArray: '3',
+          fillOpacity: getZoneOpacity(feature.properties.ZONE),
+          fillColor: getZoneColor(feature.properties.ZONE)
+        };
+        }
+      , onEachFeature: onEachZoningFeature})
+  }
+  ,{
+    active: false,
+    name: "Floodplains",
+    layer: L.geoJson(floodplains, {style: floodplainStyle})
+  }
+  ,{
+    active: false,
+    name: "Municipal Boundary",
+    layer: L.geoJson(muni, {style: muniStyle})
+  }
+  ,{
+    active: false,
+    name: "Wetlands",
+    layer: L.geoJson(wetlands, {style: wetlandsStyle})
+  }
+  // ,{
+  // 	active: false,
+  // 	name: "911 Address Points",
+  // 	icon: '<i class="icon icon-parking"></i>',
+  // 	layer: L.geoJson(addresspts, {style: addressptsStyle, onEachFeature: onEachAddressFeature})
+  // }
+  ,{
+    active: false,
+    name: "Buildings",
+    layer: L.geoJson(buildings, {style: buildingsStyle})
+  }
+];
 
 </script>
+</body>
 </html>
