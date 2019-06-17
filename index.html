@@ -51,12 +51,14 @@
   <script src="js/geojson-vt.js"></script>
   <script src="js/L.CanvasTiles.js"></script>
   <script src="data/parcels.json"></script>
-  <script src="data/town.geojson"></script>
   <script src="data/zoning.geojson"></script>
-  <!-- <script src="data/floodplains.geojson"></script>
+  <script src="data/town.geojson"></script>
+  <script src="data/floodplains.geojson"></script>
+  <script src="data/addresspts.geojson"></script>
+  <!--
   <script src="data/wetlands.geojson"></script>
   <script src="data/buildingfootprints2007.geojson"></script>
-  <script src="data/addresspoints.geojson"></script>
+
   <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-pip/v0.1.0/leaflet-pip.min.js'></script> -->
   <div id='map'>
     <div id="sidebar">
@@ -123,6 +125,7 @@
   <script>
     var tileLayer;
     var zoning, floodplains;
+    var town, addresspts;
 
     var map = L.map('map', {
       zoomControl: false,
@@ -130,7 +133,7 @@
       touchZoom: false,
       zoomAnimationThreshold: 2,
       doubleClickZoom: false
-    }).setView([35.333687, -81.864660], 12);
+    }).setView([35.333210, -81.864198], 12);
 
 	var measureControl = L.control.measure({position: 'bottomright'});
 	measureControl.addTo(map);
@@ -170,8 +173,7 @@
 
 var theScale = L.control.scale({ metric: false, imperial: true }).addTo(map);
 
-var osm = L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxNativeZoom: 19,
+var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 22,
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
 });
@@ -196,7 +198,7 @@ var esrigray = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/Canva
   maxZoom: 19,
 });
 var esritopo = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
+  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Comty',
   maxZoom: 22,
   maxNativeZoom: 18,
 });
@@ -266,8 +268,8 @@ var overLayers = [
           opacity: 1,
           color: 'white',
           dashArray: '3',
-          fillOpacity: getZoneOpacity(feature.properties.ZONE),
-          fillColor: getZoneColor(feature.properties.ZONE)
+          fillOpacity: getZoneOpacity(feature.properties.BASE_DISTR),
+          fillColor: getZoneColor(feature.properties.BASE_DISTR)
         };
         }
       , onEachFeature: onEachZoningFeature})
@@ -277,28 +279,456 @@ var overLayers = [
     name: "Floodplains",
     layer: L.geoJson(floodplains, {style: floodplainStyle})
   }
-  ,{
-    active: false,
-    name: "Municipal Boundary",
-    layer: L.geoJson(muni, {style: muniStyle})
-  }
-  ,{
-    active: false,
-    name: "Wetlands",
-    layer: L.geoJson(wetlands, {style: wetlandsStyle})
-  }
+//  ,{
+//    active: false,
+//    name: "Municipal Boundary",
+//    layer: L.geoJson(town, {style: muniStyle})
+//  }
+//  ,{
+//    active: false,
+//    name: "Wetlands",
+//    layer: L.geoJson(wetlands, {style: wetlandsStyle})
+//  }
   // ,{
   // 	active: false,
   // 	name: "911 Address Points",
   // 	icon: '<i class="icon icon-parking"></i>',
   // 	layer: L.geoJson(addresspts, {style: addressptsStyle, onEachFeature: onEachAddressFeature})
   // }
-  ,{
-    active: false,
-    name: "Buildings",
-    layer: L.geoJson(buildings, {style: buildingsStyle})
-  }
+//  ,{
+//    active: false,
+//    name: "Buildings",
+//    layer: L.geoJson(buildings, {style: buildingsStyle})
+//  }
 ];
+
+var layerControl = new L.Control.PanelLayers(baseLayers, overLayers);
+map.addControl(layerControl);
+
+function getZoneOpacity(zone)
+{
+  return zone == 'RU' ? 0
+                 : .9;
+}
+
+function getZoneColor(zone)
+  {
+    return zone == 'R-15' ? '#fff'
+    : zone == 'R-20' ? '#BDBEC2'
+    : zone == 'C-1' ? '#818D78'
+    : zone == 'C-2' ? '#484D98'
+    : zone == 'C-3' ? '#EB5058' : '#fff';
+  }
+
+
+var zoninghighlight;
+function onEachZoningFeature(feature, layer) {
+  // does this feature have a property named popupContent?
+  //layer.on({
+  //  click: zoneClicked
+  //});
+if (feature.properties && feature.properties.BASE_DISTR) {
+     layer.bindPopup(feature.properties.BASE_DISTR);
+}
+}
+
+function onEachAddressFeature(feature, layer) {
+  // does this feature have a property named popupContent?
+  //layer.on({
+  //  click: zoneClicked
+  //});
+if (feature.properties && feature.properties.FullAddres) {
+     layer.bindPopup(feature.properties.FullAddres);
+}
+
+}
+
+var theMarker = L.icon({
+  iconUrl: 'images/map-marker.png',
+  //shadowUrl: 'leaf-shadow.png',
+  iconSize: [48, 48], // size of the icon
+  //shadowSize:   [50, 64], // size of the shadow
+  iconAnchor: [24, 42], // point of the icon which will correspond to marker's location - half the width and height of icon
+  //shadowAnchor: [4, 62],  // the same for the shadow
+  popupAnchor: [0, -42] // point from which the popup should open relative to the iconAnchor
+});
+//end marker
+
+var overlays;
+var sidebar = L.control.sidebar('sidebar', { autoPan: false, closeButton: false });
+sidebar.addTo(map);
+
+var hash = L.hash(map);
+var gpsLocate = L.control.locate({ follow: true, locateOptions: { enableHighAccuracy: true } });
+//gpsLocate.addTo(map);
+var homeExtent = L.control.defaultExtent({});
+//homeExtent.addTo(map);
+var fullscreen = L.control.fullscreen();
+
+var globalsearchToggle = new L.easyButton({
+  states: [{
+    stateName: 'show',
+    icon: 'fa-exchange fa-lg',
+    title: 'Search Addresses',
+    onClick: function (btn, map) {
+      addrsearch.addTo(map);
+      btn.state('hide');
+    }
+  }, {
+    stateName: 'hide',
+    icon: 'fa-exchange fa-border fa-lg',
+    title: 'Search Features',
+    onClick: function (btn, map) {
+      map.removeControl(addrsearch);
+      btn.state('show');
+    }
+  }]
+});
+globalsearchToggle.addTo(map);
+
+var loading = L.Control.loading({ position: 'topright' }).addTo(map);
+var sidebarToggle = L.easyButton({
+  states: [{
+    stateName: 'open-sidebar',      // name the state
+    icon: 'fa-bars fa-lg',          // and define it's properties
+    title: 'Show Sidebar',          // like it's title
+    onClick: function (btn, map) {  // and it's callback
+      sidebar.show();
+      btn.state('close-sidebar');   // change state on click!
+    }
+  }, {
+    stateName: 'close-sidebar',
+    icon: 'fa-times fa-2x',
+    title: 'Hide Sidebar',
+    onClick: function (btn, map) {
+      sidebar.hide();
+      btn.state('open-sidebar');
+    }
+  }],
+  id: 'menu',
+});
+var stogglebar = L.easyBar([sidebarToggle], { id: 'toggle' }).addTo(map);
+var leafletprint = L.easyPrint();
+//end toolbar
+sidebar.on('hide', function () {
+  sidebarToggle.state('open-sidebar');
+});
+sidebar.on('show', function () {
+  sidebarToggle.state('close-sidebar');
+});
+//mobile toolbar menu
+//--tools toggle on small screens
+var toolshidden = false;
+var mobilescreen = false;
+var tools = L.easyButton({
+  states: [{
+    stateName: 'show-tools',   // name the state
+    icon: 'fa-cogs fa-lg',          // and define it's properties
+    title: 'Show Map Tools', // like it's title
+    onClick: function (btn, map) {  // and it's callback
+      leafletprint.addTo(map);
+      gpsLocate.addTo(map);
+      homeExtent.addTo(map);
+      fullscreen.addTo(map);
+      globalsearchToggle.addTo(map);
+      btn.state('hide-tools'); // change state on click!
+      toolshidden = false;
+      //console.log(toolshidden + ' state changed to hideTools');
+    }
+  }, {
+    stateName: 'hide-tools',
+    icon: 'fa-cogs fa-border fa-lg',
+    title: 'Hide Map Tools',
+    onClick: function (btn, map) {
+      map.removeControl(leafletprint);
+      map.removeControl(gpsLocate);
+      map.removeControl(homeExtent);
+      map.removeControl(fullscreen);
+      map.removeControl(globalsearchToggle);
+      btn.state('show-tools');
+      toolshidden = true;
+      //console.log(toolshidden+ ' state changed to showTools');
+    }
+  }],
+  id: 'tools',
+});
+
+var w = window.innerWidth;
+
+if (w < 481) {
+  tools.addTo(map);
+  toolshidden = true;
+  mobilescreen = true;
+  //console.log('mobile tool toggle');
+  //console.log(toolshidden + "mobilescreen: " + mobilescreen);
+} else {
+  leafletprint.addTo(map);
+  gpsLocate.addTo(map);
+  homeExtent.addTo(map);
+  fullscreen.addTo(map);
+  globalsearchToggle.addTo(map);
+  toolshidden = false;
+  //console.log(toolshidden + " " + mobilescreen);
+}
+window.onresize = function () {
+  if (toolshidden === true && window.innerWidth > 480 && mobilescreen === true) {
+    leafletprint.addTo(map);
+    gpsLocate.addTo(map);
+    homeExtent.addTo(map);
+    fullscreen.addTo(map);
+    globalsearchToggle.addTo(map);
+
+    map.removeControl(tools);
+    toolshidden = false;
+    mobilescreen = false;
+    //console.log(toolshidden + " " + mobilescreen);
+  }
+  else if (toolshidden === false && mobilescreen === true && window.innerWidth > 481) {
+    tools.state('show-tools');
+    mobilescreen = false;
+    map.removeControl(tools);
+    //console.log(toolshidden + "" + mobilescreen);
+  }
+  else if (toolshidden === false && window.innerWidth < 481 && mobilescreen === false) {
+    map.removeControl(leafletprint);
+    map.removeControl(gpsLocate);
+    map.removeControl(homeExtent);
+    map.removeControl(fullscreen);
+    map.removeControl(globalsearchToggle);
+    tools.addTo(map);
+    toolshidden = true;
+    mobilescreen = true;
+  }
+  else { }
+};
+//--end tools toggle
+
+map.on('baselayerchange', function () {
+  if (L.Browser.mobile) {
+    map.on('baselayerchange', function () {
+      setTimeout(function () {
+        $(".leaflet-control-layers").removeClass("leaflet-control-layers-expanded");
+      }, 5000);
+    });
+  }
+});
+
+map.spin(true);
+//ortho.addTo(map);
+
+// parcels and address points
+var stParcels = L.geoJson(null, {
+  onEachFeature: function (feature, layer) {
+    layer.bindPopup(feature.properties.OWNERNAME)
+  },
+  style: { color: 'pink' }
+});
+
+var addressptsLayer = new L.GeoJSON(addresspts, {
+  style: function(feature) {
+    return {color: 'red' };
+  }//,
+  //onEachFeature: function(feature, marker) {
+  //	marker.bindPopup('<h4 style="color:'+feature.properties.color+'">'+ feature.properties.name +'</h4>');
+  //}
+});
+
+var tileData = omnivore.topojson("data/parcels.json", null, stParcels);
+
+var search;
+var addrsearch;
+tileData.on('ready', function () {
+  var bounds = stParcels.getBounds();
+  //console.log("parcel bounds are :" + bounds._northEast.lat + " : " + bounds._northEast.lng)
+
+  //add search after parcelsload, so we can get the bounds of the layer to restrict the search
+  //Leaflet Search with OSM Geocode
+//var searchURL = '';
+////searchURL = 'https://nominatim.openstreetmap.org/search?format=json&q={s}';
+  //searchURL = 'https://nominatim.openstreetmap.org/search?format=json&q={s}&bounded=1&viewbox=' + bounds._northEast.lat + "," + bounds._northEast.lng + ',' + bounds._southWest.lat + "," + bounds._southWest.lng;
+
+  //osmsearch = new L.Control.Search({
+  //  url: searchURL,
+  //  jsonpParam: 'json_callback',
+  //  propertyName: 'display_name',
+  //  propertyLoc: ['lat', 'lon'],
+  //  circleLocation: false,
+  //  autoType: false,
+  //  autoCollapse: false,
+  //  minLength: 2,
+  //  zoom: 13,
+  //  textPlaceholder: 'Search Addresses',
+  //  collapsed: false
+  //});
+
+  //osmsearch.addTo(map);
+  //  var circle;
+  //  var marker;
+  //  osmsearch.on('search_locationfound', function (e) {
+  //    osmsearch.collapse();
+  //    if (marker) {
+  //      map.removeLayer(marker);
+  //    }
+  //    var name = e.display_name;
+  //    marker = new L.marker([e.latlng.lat, e.latlng.lng], { icon: theMarker }).addTo(map);
+  //});
+
+//initiate search after parcel data has loaded
+  addrsearch = new L.Control.Search({
+    layer: addressptsLayer,
+    propertyName: 'FullAddres',
+    initial: false,
+    zoom: 17,
+    collapsed: false,
+    textPlaceholder: 'Search Addresses',
+    minLength: 2
+  }).addTo(map);
+
+  addrsearch.on('search_locationfound', function (e) {
+    addrsearch.collapse();
+    setTimeout(function () {
+      map.fire('click', { latlng: e.latlng });
+    }, 200);
+  });
+
+
+  map.fitBounds(bounds);
+  $(".blank").fadeOut();
+  map.spin(false);
+  setTimeout(function () { sidebar.show() }, 500);
+
+  //initiate search after parcel data has loaded
+  search = new L.Control.Search({
+    layer: stParcels,
+    propertyName: 'OWNERNAME',
+    initial: false,
+    zoom: 17,
+    collapsed: false,
+    textPlaceholder: 'Search Owner Name',
+    minLength: 2
+  }).addTo(map);
+
+  search.on('search_locationfound', function (e) {
+    search.collapse();
+    setTimeout(function () {
+      map.fire('click', { latlng: e.latlng });
+    }, 200);
+  });
+
+
+  //end search
+
+  //----------
+  //start geojson-vt map tiles
+  //interaction on the underlying polygon not drawn but represented by the tiles - they draw better
+  var highlight;
+  map.on('click', function (e) {
+    if (highlight) {
+      map.removeLayer(highlight)
+    }
+    var x = e.latlng.lng;
+    var y = e.latlng.lat;
+    var layerData = leafletPip.pointInLayer([x, y], stParcels, true);
+    if (!layerData[0]) {
+      console.log('nothing to see here')
+    } else {
+      map.spin(true);
+      var highlightIndex = layerData[0].feature.properties.PRMAP;
+      highlight = new L.geoJson(data, {
+        filter: function (feature, layer) {
+          return feature.properties.PRMAP == highlightIndex
+        },
+        style: { color: 'red', fillColor: 'red' }
+      }).addTo(map);
+      //var attributes = highlightIndex.split('-', 2);
+      //var name = layerData[0].feature.properties.;
+      //var pin  = attributes[1];
+      var popup = 'Parcel ID: ' + layerData[0].feature.properties.PRMAP + '<hr>' + layerData[0].feature.properties.OWNERNAME;
+      map.on('popupopen', function () {
+        map.spin(false)
+      });
+      map.openPopup(popup, e.latlng);
+      map.on('popupclose', function () {
+        map.removeLayer(highlight)
+      });
+    }
+  });
+  //end point in polygon
+
+  //geojson-vt
+  var tileOptions = {
+    maxZoom: 22,  // max zoom to preserve detail on
+    tolerance: 7, // 5 simplification tolerance (higher means simpler)
+    extent: 4096, //4096, // 4096 tile extent (both width and height)
+    buffer: 64,   // 64 default 64tile buffer on each side
+    debug: 0,      // logging level (0 to disable, 1 or 2)
+    indexMaxZoom: 0,        // 0 max zoom in the initial tile index
+    indexMaxPoints: 100000, // 100000 max number of points per tile in the index
+  };
+
+  var data = stParcels.toGeoJSON();
+  var tileIndex = geojsonvt(data, tileOptions);
+  //take json output from geojson-vt and draw it with the now depricated (in leaflet-beta) L.canvasTiles and code from here - http://blog.sumbera.com/2015/05/31/geojson-vt-on-leaflet/
+  tileLayer = L.canvasTiles().params({ debug: false, padding: 50 }).drawing(drawingOnCanvas);
+  var pad = 0;
+  tileLayer.addTo(map);
+  tileLayer.setZIndex(10);
+
+  layerControl.addOverlay({
+    name: "Parcels",
+    //icon: '<i class="icon icon-water"></i>',
+    layer: tileLayer
+  });
+
+  function drawingOnCanvas(canvasOverlay, params) {
+    var bounds = params.bounds;
+    params.tilePoint.z = params.zoom;
+    var ctx = params.canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'source-over';
+    //console.log('getting tile z' + params.tilePoint.z + '-' + params.tilePoint.x + '-' + params.tilePoint.y);
+
+    var tile = tileIndex.getTile(params.tilePoint.z, params.tilePoint.x, params.tilePoint.y);
+    if (!tile) {
+      return;
+    }
+    ctx.clearRect(0, 0, params.canvas.width, params.canvas.height);
+    var features = tile.features;
+    ctx.strokeStyle = 'orange';
+
+    for (var i = 0; i < features.length; i++) {
+      var feature = features[i],
+        type = feature.type;
+
+      ctx.fillStyle = feature.tags.color ? feature.tags.color : 'transparent';
+      ctx.beginPath();
+
+      for (var j = 0; j < feature.geometry.length; j++) {
+        var geom = feature.geometry[j];
+
+        if (type === 1) {
+          ctx.arc(geom[0] * ratio + pad, geom[1] * ratio + pad, 2, 0, 2 * Math.PI, false);
+          continue;
+        }
+        //console.log("canvas");
+        for (var k = 0; k < geom.length; k++) {
+          var p = geom[k];
+          var extent = 4096;
+          var x = p[0] / extent * 256;
+          var y = p[1] / extent * 256;
+          if (k) ctx.lineTo(x + pad, y + pad);
+          else ctx.moveTo(x + pad, y + pad);
+        }
+      }
+
+      if (type === 3 || type === 1) ctx.fill();
+      ctx.stroke();
+    }
+
+  };
+
+});
+
+
 
 </script>
 </body>
