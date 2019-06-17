@@ -50,16 +50,12 @@
 <body>
   <script src="js/geojson-vt.js"></script>
   <script src="js/L.CanvasTiles.js"></script>
-  <script src="data/parcels.json"></script>
-  <script src="data/zoning.geojson"></script>
-  <script src="data/town.geojson"></script>
-  <script src="data/floodplains.geojson"></script>
-  <script src="data/addresspts.geojson"></script>
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-pip/v0.1.0/leaflet-pip.min.js'></script>
   <!--
   <script src="data/wetlands.geojson"></script>
   <script src="data/buildingfootprints2007.geojson"></script>
+ -->
 
-  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-pip/v0.1.0/leaflet-pip.min.js'></script> -->
   <div id='map'>
     <div id="sidebar">
       <h2 style="font-family:Archivo Black, sans-serif;">Town of Forest City</h2>
@@ -82,24 +78,13 @@
         <div class="toolLegend" style="display:none;">
           <hr />
           <div class="list-group" style="text-align:left;">
-            <li class="list-group-item">
-              <i class='fa fa-bars fa-fw fa-lg'></i> Open Sidebar</li>
-
-            <li class="list-group-item">
-              <i class='fa fa-exchange fa-fw fa-lg'></i> Toggle Address Search</li>
-
-            <li class="list-group-item">
-              <img src="images/fullscreen-img.png" style="padding:0 1px;width:22px;"></img> Fullscreen</li>
-            <li class="list-group-item">
-              <i class='fa fa-globe fa-fw fa-lg'></i> Default Map Extent</li>
-            <li class="list-group-item">
-              <i class='fa fa-map-marker fa-fw fa-lg'></i> Show/Follow Your Location</li>
-
-            <li class="list-group-item">
-              <i class='fa fa-cogs fa-fw fa-lg'></i> Toggle Map Tools (Mobile Only)</li>
-            <li class="list-group-item">
-              <img src="images/layers-bl.png" style="padding:0 1px;width:22px;"></img> Toggle Map Layers</li>
-
+            <li class="list-group-item"><i class='fa fa-bars fa-fw fa-lg'></i> Open Sidebar</li>
+            <li class="list-group-item"><i class='fa fa-exchange fa-fw fa-lg'></i> Toggle Address Search</li>
+            <li class="list-group-item"><img src="images/fullscreen-img.png" style="padding:0 1px;width:22px;"></img> Fullscreen</li>
+            <li class="list-group-item"> <i class='fa fa-globe fa-fw fa-lg'></i> Default Map Extent</li>
+            <li class="list-group-item"><i class='fa fa-map-marker fa-fw fa-lg'></i> Show/Follow Your Location</li>
+            <li class="list-group-item"><i class='fa fa-cogs fa-fw fa-lg'></i> Toggle Map Tools (Mobile Only)</li>
+            <li class="list-group-item"><img src="images/layers-bl.png" style="padding:0 1px;width:22px;"></img> Toggle Map Layers</li>
           </div>
         </div>
         <hr />
@@ -119,13 +104,11 @@
       </script>
 
       <h6><a href='http://townofforestcity.com' target='_blank' style='text-decoration:none;'>Town of Forest City</a> | Map data updated 6/2019.</h6>
-
     </div>
   </div>
   <script>
-    var tileLayer;
-    var zoning, floodplains;
-    var town, addresspts;
+    // these to be removed 
+    var zoning, floodplains, addresspts, parcels;
 
     var map = L.map('map', {
       zoomControl: false,
@@ -169,49 +152,24 @@
     x.style.display = x.style.display === 'block' ? '' : 'block';
   }
 
-// begin with map tiles //
+// begin map tiles //
 
 var theScale = L.control.scale({ metric: false, imperial: true }).addTo(map);
 
-var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+var osm = L.tileLayer('', {
   maxZoom: 22,
   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-});
-
-var osmhot = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, Tiles courtesy of <a href="http://hot.openstreetmap.org/" target="_blank">Humanitarian OpenStreetMap Team</a>'
-});
-
-var stamentoner = new L.tileLayer.provider('Stamen.Toner');
-var stamentonerlight = new L.tileLayer.provider('Stamen.TonerLite');
-var watercolor = L.tileLayer('//stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.png', {
-  attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  subdomains: 'abcd',
-  maxNativeZoom: 14,
-  maxZoom: 17,
-  ext: 'png',
-});
-var esrigray = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
-  maxNativeZoom: 16,
-  maxZoom: 19,
-});
-var esritopo = L.tileLayer('//server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Comty',
-  maxZoom: 22,
-  maxNativeZoom: 18,
 });
 
 // container for base layers
 var baseLayers = [
   {
-    active: true,
+    active: false,
     name: "Open Street Map",
-    layer: L.tileLayer('//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
+    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
   },
   {
-    active: false,
+    active: true,
     name: "Satellite",
     layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
   },
@@ -306,7 +264,7 @@ var layerControl = new L.Control.PanelLayers(baseLayers, overLayers);
 map.addControl(layerControl);
 
 function getZoneOpacity(zone)
-{
+  {
   return zone == 'RU' ? 0
                  : .9;
 }
@@ -322,6 +280,7 @@ function getZoneColor(zone)
 
 
 var zoninghighlight;
+
 function onEachZoningFeature(feature, layer) {
   // does this feature have a property named popupContent?
   //layer.on({
@@ -539,39 +498,6 @@ var search;
 var addrsearch;
 tileData.on('ready', function () {
   var bounds = stParcels.getBounds();
-  //console.log("parcel bounds are :" + bounds._northEast.lat + " : " + bounds._northEast.lng)
-
-  //add search after parcelsload, so we can get the bounds of the layer to restrict the search
-  //Leaflet Search with OSM Geocode
-//var searchURL = '';
-////searchURL = 'https://nominatim.openstreetmap.org/search?format=json&q={s}';
-  //searchURL = 'https://nominatim.openstreetmap.org/search?format=json&q={s}&bounded=1&viewbox=' + bounds._northEast.lat + "," + bounds._northEast.lng + ',' + bounds._southWest.lat + "," + bounds._southWest.lng;
-
-  //osmsearch = new L.Control.Search({
-  //  url: searchURL,
-  //  jsonpParam: 'json_callback',
-  //  propertyName: 'display_name',
-  //  propertyLoc: ['lat', 'lon'],
-  //  circleLocation: false,
-  //  autoType: false,
-  //  autoCollapse: false,
-  //  minLength: 2,
-  //  zoom: 13,
-  //  textPlaceholder: 'Search Addresses',
-  //  collapsed: false
-  //});
-
-  //osmsearch.addTo(map);
-  //  var circle;
-  //  var marker;
-  //  osmsearch.on('search_locationfound', function (e) {
-  //    osmsearch.collapse();
-  //    if (marker) {
-  //      map.removeLayer(marker);
-  //    }
-  //    var name = e.display_name;
-  //    marker = new L.marker([e.latlng.lat, e.latlng.lng], { icon: theMarker }).addTo(map);
-  //});
 
 //initiate search after parcel data has loaded
   addrsearch = new L.Control.Search({
