@@ -428,10 +428,10 @@ tileData.on('ready', function() {
     layer: parcels,
     propertyName: 'index',
     initial: false,
-    zoom: 17,
+    zoom: 18,
     collapsed: false,
-    textPlaceholder: 'Parcel ID or Deed',
-    minLength: 4
+    textPlaceholder: 'PIN or Owner',
+    minLength: 3
   }).addTo(map);
   search.on('search_locationfound', function(e) {
     search.collapse();
@@ -469,11 +469,12 @@ tileData.on('ready', function() {
           fillColor: 'deepskyblue'
         }
       }).addTo(map);
-      var attributes = highlightIndex.split(' | ', 2);
+      var attributes = highlightIndex.split(' | ', 3);
       //--adjust here if you have more than two fields in your index field or someone can write a code that just lists them all--//
       var pin = attributes[0];
       var po = attributes[1];
-      var popup = 'Parcel Number: ' + pin + '<hr>Property Owner: ' + po;
+      var addr = attributes [2];
+      var popup = 'PIN: ' + pin + '<hr>Property Owner: ' + po + '<hr>Address: ' + addr;
       map.on('popupopen', function() {
         map.spin(false)
       });
