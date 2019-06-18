@@ -198,10 +198,26 @@ var basemaps = [
     layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
   }
 ];
+// end map tiles //
 
-// end map-tiles //
+// baselayer styling //
+var muniStyle = {
+  "color": '#000000',
+  "weight": 3,
+  "opacity": 1,
+  "dashArray": 3,
+  fillOpacity: 0
+};
+var floodplainStyle = {
+  "color": "#178eef",
+  "weight": 2,
+  "opacity": 0.65,
+  fillOpacity: 0.5,
+  fillColor: '#abd3f4'
+};
+//end styling //
 
-// layer options //
+// baselayer container //
 var baselayers = [
   {
     active: false,
@@ -209,15 +225,14 @@ var baselayers = [
     layer: new L.GeoJSON.AJAX("data/zoning.geojson", {
       style: function(feature) {
         return {
-          weight: 2,
+          weight: 1,
           opacity: 1,
-          color: 'white',
-          dashArray: '3',
-          fillOpacity: 0.7,
-          fillColor: 'blue'
-        };
-        }
-      , onEachFeature: onEachZoningFeature})
+          color: 'none',
+          fillOpacity: getZoneOpacity(feature.properties.BASE_DISTR),
+          fillColor: getZoneColor(feature.properties.BASE_DISTR)
+    };
+    }
+  , onEachFeature: onEachZoningFeature})
   }
   ,{
     active: false,
@@ -234,27 +249,34 @@ var baselayers = [
 var layerControl = new L.Control.PanelLayers(basemaps, baselayers);
 map.addControl(layerControl);
 
-// baselayer functions and styling //
+// baselayer functions //
 function onEachZoningFeature(feature, layer) {
   if (feature.properties && feature.properties.BASE_DISTR) {
      layer.bindPopup(feature.properties.BASE_DISTR);
    }
 }
 
-var muniStyle = {
-  "color": "#000",
-  "weight": 2,
-  "opacity": 1,
-  fillOpacity: 0
-};
-var floodplainStyle = {
-  "color": "#178eef",
-  "weight": 2,
-  "opacity": 0.65,
-  fillOpacity: 0.5,
-  fillColor: '#abd3f4'
-};
 
+
+function getZoneOpacity(zone)
+  {
+  return zone == 'RU' ? 0
+                 : .7;
+               }
+
+function getZoneColor(zone)
+  {
+    return zone == 'C-1' ? '#fccde5'
+    : zone == 'C-2' ? '#FDB462'
+    : zone == 'C-3' ? '#fb8072'
+    : zone == 'M-1' ? '#d9d9d9'
+    : zone == 'OI' ? '#80b1d3'
+    : zone == 'R-6' ? '#ffed6f'
+    : zone == 'R-8' ? '#ffed6f'
+    : zone == 'R-15' ? '#ccebc5'
+    : zone == 'R-20' ? '#b3de69'
+    : zone == 'PRD' ? '#bc80bd' : '#fff';
+  }
 
 //--show google imagery at higher zoom levels (removed - no API)
 // map.on('zoomend', function() {
