@@ -77,8 +77,6 @@
   }
 </style>
 
-
-
 <body>
   <!-- GeoJson tile Scripts -->
   <script src="assets/geojson-tiles/geojson-vt-dev.js"></script>
@@ -608,6 +606,12 @@ tileData.on('ready', function() {
   var pad = 0;
   tileLayer.addTo(map);
   tileLayer.setZIndex(10);
+
+  layerControl.addOverlay({
+    name: "Parcels",
+    //icon: '<i class="icon icon-water"></i>',
+    layer: tileLayer
+  });
 
   function drawingOnCanvas(canvasOverlay, params) {
 
