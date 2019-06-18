@@ -199,6 +199,7 @@ var basemaps = {
   "<div class='layers-control-img'><img src='assets/images/layer-control-images/cdb-dark.png'></div> Dark Matter": cdbdark,
 };
 
+var overlays ;
 //--show google imagery at higher zoom levels
 map.on('zoomend', function() {
   if (map.getZoom() > 18 && map.hasLayer(ortho)) {
@@ -425,7 +426,7 @@ tileData.on('ready', function() {
   //initiate search after parcel data has loaded
   search = new L.Control.Search({
     layer: parcels,
-    propertyName: 'ParcelID',
+    propertyName: 'index',
     initial: false,
     zoom: 17,
     collapsed: false,
@@ -458,10 +459,10 @@ tileData.on('ready', function() {
       console.log('nothing to see here')
     } else {
       map.spin(true);
-      var highlightIndex = layerData[0].feature.properties.ParcelID;
+      var highlightIndex = layerData[0].feature.properties.index;
       highlight = new L.geoJson(data, {
         filter: function(feature, layer) {
-          return feature.properties.ParcelID == highlightIndex
+          return feature.properties.index == highlightIndex
         },
         style: {
           color: 'deepskyblue',
@@ -471,8 +472,8 @@ tileData.on('ready', function() {
       var attributes = highlightIndex.split(' | ', 2);
       //--adjust here if you have more than two fields in your index field or someone can write a code that just lists them all--//
       var pin = attributes[0];
-      var deed = attributes[1];
-      var popup = 'Parcel ID: ' + pin + '<hr>Deed: ' + deed;
+      var po = attributes[1];
+      var popup = 'Parcel Number: ' + pin + '<hr>Property Owner: ' + po;
       map.on('popupopen', function() {
         map.spin(false)
       });
