@@ -75,8 +75,9 @@
 
 
 <body>
-  <script src="js/geojson-vt.js"></script>
-  <script src="js/L.CanvasTiles.js"></script>
+  <!-- GeoJson tile Scripts -->
+  <script src="assets/geojson-tiles/geojson-vt-dev.js"></script>
+  <script src="assets/geojson-tiles/L.CanvasTiles.js"></script>
   <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-pip/v0.1.0/leaflet-pip.min.js'></script>
 
   <div id='map'>
@@ -245,8 +246,14 @@ var sidebar = L.control.sidebar('sidebar', {
 sidebar.addTo(map);
 
 
+//Toggle OSM Search and Feature Search - remove if no feature search
 var hash = L.hash(map);
-var gpsLocate = L.control.locate({ follow: true, locateOptions: { enableHighAccuracy: true } });
+var gpsLocate = L.control.locate({
+  follow: true,
+  locateOptions: {
+    enableHighAccuracy: true
+  }
+});
 //gpsLocate.addTo(map);
 var homeExtent = L.control.defaultExtent({});
 //homeExtent.addTo(map);
@@ -257,138 +264,136 @@ var globalsearchToggle = new L.easyButton({
     stateName: 'show',
     icon: 'fa-exchange fa-lg',
     title: 'Search Addresses',
-    onClick: function (btn, map) {
-      addrsearch.addTo(map);
+    onClick: function(btn, map) {
+      osmsearch.addTo(map);
       btn.state('hide');
     }
   }, {
     stateName: 'hide',
     icon: 'fa-exchange fa-border fa-lg',
     title: 'Search Features',
-    onClick: function (btn, map) {
-      map.removeControl(addrsearch);
+    onClick: function(btn, map) {
+      map.removeControl(osmsearch);
       btn.state('show');
     }
   }]
 });
-globalsearchToggle.addTo(map);
 
-var loading = L.Control.loading({ position: 'topright' }).addTo(map);
-var sidebarToggle = L.easyButton({
-  states: [{
-    stateName: 'open-sidebar',      // name the state
-    icon: 'fa-bars fa-lg',          // and define it's properties
-    title: 'Show Sidebar',          // like it's title
-    onClick: function (btn, map) {  // and it's callback
-      sidebar.show();
-      btn.state('close-sidebar');   // change state on click!
-    }
-  }, {
-    stateName: 'close-sidebar',
-    icon: 'fa-times fa-2x',
-    title: 'Hide Sidebar',
-    onClick: function (btn, map) {
-      sidebar.hide();
-      btn.state('open-sidebar');
-    }
-  }],
-  id: 'menu',
-});
-var stogglebar = L.easyBar([sidebarToggle], { id: 'toggle' }).addTo(map);
-var leafletprint = L.easyPrint();
-//end toolbar
-sidebar.on('hide', function () {
-  sidebarToggle.state('open-sidebar');
-});
-sidebar.on('show', function () {
-  sidebarToggle.state('close-sidebar');
-});
-//mobile toolbar menu
-//--tools toggle on small screens
-var toolshidden = false;
-var mobilescreen = false;
-var tools = L.easyButton({
-  states: [{
-    stateName: 'show-tools',   // name the state
-    icon: 'fa-cogs fa-lg',          // and define it's properties
-    title: 'Show Map Tools', // like it's title
-    onClick: function (btn, map) {  // and it's callback
+
+    var loading = L.Control.loading({
+      position: 'topright'
+    }).addTo(map);
+    var sidebarToggle = L.easyButton({
+      states: [{
+        stateName: 'open-sidebar', // name the state
+        icon: 'fa-bars fa-lg', // and define it's properties
+        title: 'Show Sidebar', // like it's title
+        onClick: function(btn, map) { // and it's callback
+          sidebar.show();
+          btn.state('close-sidebar'); // change state on click!
+        }
+      }, {
+        stateName: 'close-sidebar',
+        icon: 'fa-times fa-2x',
+        title: 'Hide Sidebar',
+        onClick: function(btn, map) {
+          sidebar.hide();
+          btn.state('open-sidebar');
+        }
+      }],
+      id: 'menu',
+    });
+    var stogglebar = L.easyBar([sidebarToggle], {
+      id: 'toggle'
+    }).addTo(map);
+    var leafletprint = L.easyPrint();
+    //end toolbar
+    sidebar.on('hide', function() {
+      sidebarToggle.state('open-sidebar');
+    });
+    sidebar.on('show', function() {
+      sidebarToggle.state('close-sidebar');
+    });
+    //mobile toolbar menu
+    //--tools toggle on small screens
+    var toolshidden = false;
+    var mobilescreen = false;
+    var tools = L.easyButton({
+      states: [{
+        stateName: 'show-tools', // name the state
+        icon: 'fa-cogs fa-lg', // and define it's properties
+        title: 'Show Map Tools', // like it's title
+        onClick: function(btn, map) { // and it's callback
+          leafletprint.addTo(map);
+          gpsLocate.addTo(map);
+          homeExtent.addTo(map);
+          fullscreen.addTo(map);
+
+          globalsearchToggle.addTo(map);
+
+          btn.state('hide-tools'); // change state on click!
+          toolshidden = false;
+          //console.log(toolshidden + ' state changed to hideTools');
+        }
+      }, {
+        stateName: 'hide-tools',
+        icon: 'fa-cogs fa-border fa-lg',
+        title: 'Hide Map Tools',
+        onClick: function(btn, map) {
+          map.removeControl(leafletprint);
+          map.removeControl(gpsLocate);
+          map.removeControl(homeExtent);
+          map.removeControl(fullscreen);
+
+          map.removeControl(globalsearchToggle);
+
+          btn.state('show-tools');
+          toolshidden = true;
+          //console.log(toolshidden+ ' state changed to showTools');
+        }
+      }],
+      id: 'tools',
+    });
+    console.log('tools loaded');
+    var w = window.innerWidth;
+    console.log('screen width: ' + w);
+    if (w < 481) {
+      tools.addTo(map);
+      toolshidden = true;
+      mobilescreen = true;
+    } else {
       leafletprint.addTo(map);
       gpsLocate.addTo(map);
       homeExtent.addTo(map);
       fullscreen.addTo(map);
       globalsearchToggle.addTo(map);
-      btn.state('hide-tools'); // change state on click!
       toolshidden = false;
-      //console.log(toolshidden + ' state changed to hideTools');
     }
-  }, {
-    stateName: 'hide-tools',
-    icon: 'fa-cogs fa-border fa-lg',
-    title: 'Hide Map Tools',
-    onClick: function (btn, map) {
-      map.removeControl(leafletprint);
-      map.removeControl(gpsLocate);
-      map.removeControl(homeExtent);
-      map.removeControl(fullscreen);
-      map.removeControl(globalsearchToggle);
-      btn.state('show-tools');
-      toolshidden = true;
-      //console.log(toolshidden+ ' state changed to showTools');
-    }
-  }],
-  id: 'tools',
-});
-
-var w = window.innerWidth;
-
-if (w < 481) {
-  tools.addTo(map);
-  toolshidden = true;
-  mobilescreen = true;
-  //console.log('mobile tool toggle');
-  //console.log(toolshidden + "mobilescreen: " + mobilescreen);
-} else {
-  leafletprint.addTo(map);
-  gpsLocate.addTo(map);
-  homeExtent.addTo(map);
-  fullscreen.addTo(map);
-  globalsearchToggle.addTo(map);
-  toolshidden = false;
-  //console.log(toolshidden + " " + mobilescreen);
-}
-window.onresize = function () {
-  if (toolshidden === true && window.innerWidth > 480 && mobilescreen === true) {
-    leafletprint.addTo(map);
-    gpsLocate.addTo(map);
-    homeExtent.addTo(map);
-    fullscreen.addTo(map);
-    globalsearchToggle.addTo(map);
-
-    map.removeControl(tools);
-    toolshidden = false;
-    mobilescreen = false;
-    //console.log(toolshidden + " " + mobilescreen);
-  }
-  else if (toolshidden === false && mobilescreen === true && window.innerWidth > 481) {
-    tools.state('show-tools');
-    mobilescreen = false;
-    map.removeControl(tools);
-    //console.log(toolshidden + "" + mobilescreen);
-  }
-  else if (toolshidden === false && window.innerWidth < 481 && mobilescreen === false) {
-    map.removeControl(leafletprint);
-    map.removeControl(gpsLocate);
-    map.removeControl(homeExtent);
-    map.removeControl(fullscreen);
-    map.removeControl(globalsearchToggle);
-    tools.addTo(map);
-    toolshidden = true;
-    mobilescreen = true;
-  }
-  else { }
-};
-//--end tools toggle
+    window.onresize = function() {
+      if (toolshidden === true && window.innerWidth > 480 && mobilescreen === true) {
+        leafletprint.addTo(map);
+        gpsLocate.addTo(map);
+        homeExtent.addTo(map);
+        fullscreen.addTo(map);
+        globalsearchToggle.addTo(map);
+        map.removeControl(tools);
+        toolshidden = false;
+        mobilescreen = false;
+      } else if (toolshidden === false && mobilescreen === true && window.innerWidth > 481) {
+        tools.state('show-tools');
+        mobilescreen = false;
+        map.removeControl(tools);
+      } else if (toolshidden === false && window.innerWidth < 481 && mobilescreen === false) {
+        map.removeControl(leafletprint);
+        map.removeControl(gpsLocate);
+        map.removeControl(homeExtent);
+        map.removeControl(fullscreen);
+        map.removeControl(globalsearchToggle);
+        tools.addTo(map);
+        toolshidden = true;
+        mobilescreen = true;
+      } else {}
+    };
 
 map.on('baselayerchange', function () {
   if (L.Browser.mobile) {
@@ -400,154 +405,129 @@ map.on('baselayerchange', function () {
   }
 });
 
-map.spin(true);
-//ortho.addTo(map);
+// end tools toggle and modern UI toolbar  //
 
-// parcels and address points
-var stParcels = L.geoJson(null, {
-  onEachFeature: function (feature, layer) {
-    layer.bindPopup(feature.properties.OWNERNAME)
-  },
-  style: { color: 'pink' }
-});
-
-var addressptsLayer = new L.GeoJSON(addresspts, {
-  style: function(feature) {
-    return {color: 'red' };
-  }//,
-  //onEachFeature: function(feature, marker) {
-  //	marker.bindPopup('<h4 style="color:'+feature.properties.color+'">'+ feature.properties.name +'</h4>');
-  //}
-});
-
-var tileData = omnivore.topojson("data/parcels.json", null, stParcels);
-
+var customZoom = L.control.zoom({
+  position: 'topright'
+}).addTo(map);
+ortho.addTo(map);
+var parcels = L.geoJson();
+var tileData = omnivore.topojson("./data/parcels.json", null, parcels);
 var search;
-var addrsearch;
-tileData.on('ready', function () {
-  var bounds = stParcels.getBounds();
-
-//initiate search after parcel data has loaded
-  addrsearch = new L.Control.Search({
-    layer: addressptsLayer,
-    propertyName: 'FullAddres',
-    initial: false,
-    zoom: 17,
-    collapsed: false,
-    textPlaceholder: 'Search Addresses',
-    minLength: 2
-  }).addTo(map);
-
-  addrsearch.on('search_locationfound', function (e) {
-    addrsearch.collapse();
-    setTimeout(function () {
-      map.fire('click', { latlng: e.latlng });
-    }, 200);
-  });
-
-
-  map.fitBounds(bounds);
+tileData.on('ready', function() {
+  console.log('parcel data ready');
+  map.fitBounds(parcels.getBounds());
   $(".blank").fadeOut();
   map.spin(false);
-  setTimeout(function () { sidebar.show() }, 500);
-
+  setTimeout(function() {
+    sidebar.show()
+  }, 700);
   //initiate search after parcel data has loaded
   search = new L.Control.Search({
-    layer: stParcels,
-    propertyName: 'OWNERNAME',
+    layer: parcels,
+    propertyName: 'ParcelID',
     initial: false,
     zoom: 17,
     collapsed: false,
-    textPlaceholder: 'Search Owner Name',
-    minLength: 2
+    textPlaceholder: 'Parcel ID or Deed',
+    minLength: 4
   }).addTo(map);
-
-  search.on('search_locationfound', function (e) {
+  search.on('search_locationfound', function(e) {
     search.collapse();
-    setTimeout(function () {
-      map.fire('click', { latlng: e.latlng });
+    setTimeout(function() {
+      map.fire('click', {
+        latlng: e.latlng
+      });
     }, 200);
   });
-
-
-  //end search
-
-  //----------
-  //start geojson-vt map tiles
-  //interaction on the underlying polygon not drawn but represented by the tiles - they draw better
+  //--end search--//
+  //--start geojson-vt map tiles--//
+  //--interaction on the underlying polygon not drawn but represented by the tiles - they draw better--//
+  //--end search--//
+  //--start geojson-vt map tiles--//
+  //--interaction on the underlying polygon not drawn but represented by the tiles - they draw better--//
   var highlight;
-  map.on('click', function (e) {
+  map.on('click', function(e) {
     if (highlight) {
       map.removeLayer(highlight)
     }
     var x = e.latlng.lng;
     var y = e.latlng.lat;
-    var layerData = leafletPip.pointInLayer([x, y], stParcels, true);
+    var layerData = leafletPip.pointInLayer([x, y], parcels, true);
     if (!layerData[0]) {
       console.log('nothing to see here')
     } else {
       map.spin(true);
-      var highlightIndex = layerData[0].feature.properties.PRMAP;
+      var highlightIndex = layerData[0].feature.properties.ParcelID;
       highlight = new L.geoJson(data, {
-        filter: function (feature, layer) {
-          return feature.properties.PRMAP == highlightIndex
+        filter: function(feature, layer) {
+          return feature.properties.ParcelID == highlightIndex
         },
-        style: { color: 'red', fillColor: 'red' }
+        style: {
+          color: 'deepskyblue',
+          fillColor: 'deepskyblue'
+        }
       }).addTo(map);
-      //var attributes = highlightIndex.split('-', 2);
-      //var name = layerData[0].feature.properties.;
-      //var pin  = attributes[1];
-      var popup = 'Parcel ID: ' + layerData[0].feature.properties.PRMAP + '<hr>' + layerData[0].feature.properties.OWNERNAME;
-      map.on('popupopen', function () {
+      var attributes = highlightIndex.split(' | ', 2);
+      //--adjust here if you have more than two fields in your index field or someone can write a code that just lists them all--//
+      var pin = attributes[0];
+      var deed = attributes[1];
+      var popup = 'Parcel ID: ' + pin + '<hr>Deed: ' + deed;
+      map.on('popupopen', function() {
         map.spin(false)
       });
       map.openPopup(popup, e.latlng);
-      map.on('popupclose', function () {
+      map.on('popupclose', function() {
         map.removeLayer(highlight)
       });
     }
   });
   //end point in polygon
-
   //geojson-vt
   var tileOptions = {
-    maxZoom: 22,  // max zoom to preserve detail on
+    maxZoom: 20, // max zoom to preserve detail on
     tolerance: 7, // 5 simplification tolerance (higher means simpler)
     extent: 4096, //4096, // 4096 tile extent (both width and height)
-    buffer: 64,   // 64 default 64tile buffer on each side
-    debug: 0,      // logging level (0 to disable, 1 or 2)
-    indexMaxZoom: 0,        // 0 max zoom in the initial tile index
+    buffer: 64, // 64 default 64tile buffer on each side
+    debug: 0, // logging level (0 to disable, 1 or 2)
+    indexMaxZoom: 0, // 0 max zoom in the initial tile index
     indexMaxPoints: 100000, // 100000 max number of points per tile in the index
   };
+  var data = parcels.toGeoJSON();
 
-  var data = stParcels.toGeoJSON();
   var tileIndex = geojsonvt(data, tileOptions);
   //take json output from geojson-vt and draw it with the now depricated (in leaflet-beta) L.canvasTiles and code from here - http://blog.sumbera.com/2015/05/31/geojson-vt-on-leaflet/
-  tileLayer = L.canvasTiles().params({ debug: false, padding: 50 }).drawing(drawingOnCanvas);
+  var tileLayer = L.canvasTiles().params({
+    debug: false,
+    padding: 50
+  }).drawing(drawingOnCanvas);
   var pad = 0;
   tileLayer.addTo(map);
   tileLayer.setZIndex(10);
 
-  layerControl.addOverlay({
-    name: "Parcels",
-    //icon: '<i class="icon icon-water"></i>',
-    layer: tileLayer
-  });
-
   function drawingOnCanvas(canvasOverlay, params) {
+
     var bounds = params.bounds;
     params.tilePoint.z = params.zoom;
+
     var ctx = params.canvas.getContext('2d');
     ctx.globalCompositeOperation = 'source-over';
+
+
     //console.log('getting tile z' + params.tilePoint.z + '-' + params.tilePoint.x + '-' + params.tilePoint.y);
 
     var tile = tileIndex.getTile(params.tilePoint.z, params.tilePoint.x, params.tilePoint.y);
     if (!tile) {
+      //console.log('tile empty');
       return;
     }
+
     ctx.clearRect(0, 0, params.canvas.width, params.canvas.height);
+
     var features = tile.features;
+
     ctx.strokeStyle = 'orange';
+
 
     for (var i = 0; i < features.length; i++) {
       var feature = features[i],
@@ -563,10 +543,11 @@ tileData.on('ready', function () {
           ctx.arc(geom[0] * ratio + pad, geom[1] * ratio + pad, 2, 0, 2 * Math.PI, false);
           continue;
         }
-        //console.log("canvas");
+
         for (var k = 0; k < geom.length; k++) {
           var p = geom[k];
           var extent = 4096;
+
           var x = p[0] / extent * 256;
           var y = p[1] / extent * 256;
           if (k) ctx.lineTo(x + pad, y + pad);
@@ -580,8 +561,30 @@ tileData.on('ready', function () {
 
   };
 
-});
+  });
+  //--flood--//
+  // add local data //
 
+  /*//--Popup is too slow to respond plus the layer is labeled--//
+  nfhl.bindPopup(function (error, featureCollection) {
+  if(error || featureCollection.features.length === 0) {
+  return false;
+  } else {
+  return featureCollection.features[0].properties.FLD_ZONE;
+  }
+  });
+  */
+
+  //--end--//
+  map.on('overlayadd', function() {
+  if(map.getZoom() < 14) {
+  map.setZoomAround(map.getCenter(), 14);
+  }
+  $("#mapLegend").html("<img src='data/nfhl.png' alt='legend' style='width:100%;border:lightgray solid thin;padding:10px;margin-bottom: 10px;'/>");
+  });
+  map.on('overlayremove', function() {
+  $("#mapLegend").html("");
+  });
 
 
 </script>
