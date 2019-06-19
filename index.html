@@ -62,6 +62,9 @@
   <!--Leaflet PanelLayers -->
   <link rel="stylesheet" href="assets/panel/leaflet-panel-layers.css" />
   <script src="assets/panel/leaflet-panel-layers.js"></script>
+  <!--Leaflet Html Legend -->
+  <link rel="stylesheet" href="assets/legend/htmlLegend.css" />
+  <script src="assets/legend/htmlLegend.js"></script>
   <!--OVRDC Custom Styles-->
   <link rel="stylesheet" href="assets/css/ovrdc-style.css" />
   <link rel="stylesheet" href="assets/css/modern-ui.css" />
@@ -97,7 +100,6 @@
       <strong>Use zoom controls to navigate the map. Pinch & zoom and double tap to zoom have been disabled. With Zoning layer enabled, click to see zoning district, and double-click to see parcel owner.</strong>
       <hr />
       <em>The parcels shown are for informational purposes only. <br>Map data is only updated once or so per year.</em>
-
       <div>
         <hr />
         <button id="showTools" type="button" class="btn btn-default btn-xs btn-block">Show Map Tools Legend</button>
@@ -129,7 +131,6 @@
           $("#hideTools").toggle();
         });
       </script>
-
       <h6><a href='http://townofforestcity.com' target='_blank' style='text-decoration:none;'>Town of Forest City</a> | Map data updated 6/2019.</h6>
     </div>
   </div>
@@ -143,6 +144,7 @@ var map = L.map('map', {
   zoomAnimationThreshold: 2,
   doubleClickZoom: false
 }).setView([35.333210, -81.864198], 12);
+
 
 // begin map tiles //
 
@@ -186,14 +188,19 @@ var ortho = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Wo
 
 var basemaps = [
   {
-    active: false,
-    name: "Open Street Map",
-    layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png')
-  },
-  {
     active: true,
     name: "Satellite",
     layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
+  },
+  {
+    active: false,
+    name: "Street Map",
+    layer: L.tileLayer('https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=7b04830d899e4a91be1e0a117371e288')
+  },
+  {
+    active: false,
+    name: "Topographic",
+    layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}')
   }
 ];
 // end map tiles //
@@ -239,12 +246,14 @@ var baselayers = [
   }
   ,{
     active: false,
-    name: "Municipal Boundary",
+    name: "Town Limit",
     layer: new L.GeoJSON.AJAX("data/muni.geojson", {style: muniStyle})
   }
 ];
 
-var layerControl = new L.Control.PanelLayers(basemaps, baselayers);
+var layerControl = new L.Control.PanelLayers(basemaps, baselayers, {
+  compact: true
+});
 map.addControl(layerControl);
 
 // baselayer functions //
@@ -505,6 +514,8 @@ map.on('baselayerchange', function () {
 
 // end tools toggle and modern UI toolbar  //
 
+
+
 var customZoom = L.control.zoom({
   position: 'topright'
 }).addTo(map);
@@ -607,12 +618,8 @@ tileData.on('ready', function() {
   tileLayer.addTo(map);
   tileLayer.setZIndex(10);
 
-  layerControl.addOverlay({
-    name: "Parcels",
-    //icon: '<i class="icon icon-water"></i>',
-    layer: tileLayer
-  });
 
+// geojson VT //
   function drawingOnCanvas(canvasOverlay, params) {
 
     var bounds = params.bounds;
@@ -634,8 +641,7 @@ tileData.on('ready', function() {
 
     var features = tile.features;
 
-    ctx.strokeStyle = 'orange';
-
+    ctx.strokeStyle = 'white';
 
     for (var i = 0; i < features.length; i++) {
       var feature = features[i],
@@ -655,43 +661,16 @@ tileData.on('ready', function() {
         for (var k = 0; k < geom.length; k++) {
           var p = geom[k];
           var extent = 4096;
-
           var x = p[0] / extent * 256;
           var y = p[1] / extent * 256;
           if (k) ctx.lineTo(x + pad, y + pad);
           else ctx.moveTo(x + pad, y + pad);
         }
       }
-
       if (type === 3 || type === 1) ctx.fill();
       ctx.stroke();
     }
-
   };
-
-  });
-  //--flood--//
-  // add local data //
-
-  /*//--Popup is too slow to respond plus the layer is labeled--//
-  nfhl.bindPopup(function (error, featureCollection) {
-  if(error || featureCollection.features.length === 0) {
-  return false;
-  } else {
-  return featureCollection.features[0].properties.FLD_ZONE;
-  }
-  });
-  */
-
-  //--end--//
-  map.on('overlayadd', function() {
-  if(map.getZoom() < 14) {
-  map.setZoomAround(map.getCenter(), 14);
-  }
-  $("#mapLegend").html("<img src='data/nfhl.png' alt='legend' style='width:100%;border:lightgray solid thin;padding:10px;margin-bottom: 10px;'/>");
-  });
-  map.on('overlayremove', function() {
-  $("#mapLegend").html("");
   });
 
 
