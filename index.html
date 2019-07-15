@@ -243,7 +243,7 @@ var baselayers = [
     layer: new L.GeoJSON.AJAX("data/floodplains.geojson", {style: floodplainStyle})
   }
   ,{
-    active: true,
+    active: false,
     name: "Town Limit",
     layer: new L.GeoJSON.AJAX("data/muni.geojson", {style: muniStyle})
   }
@@ -596,7 +596,7 @@ tileData.on('ready', function() {
   tileLayer.setZIndex(10);
 
   layerControl.addOverlay({
-    active: false,
+    active: true,
     name: "Parcels",
     //icon: '<i class="icon icon-water"></i>',
     layer: tileLayer
