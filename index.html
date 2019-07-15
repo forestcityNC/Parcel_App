@@ -93,9 +93,7 @@
       <h5 style="font-family:Archivo Black, sans-serif;">
       Address: 128 N Powell St. Forest City, N.C.<br>
       Phone: 828-247-4412<br>
-      Fax: 570-319-1321<br>
-      Hours: 8:00 A.M. – 5:00 P.M., Monday through Friday<br>
-      E-mail Address: drewharris@townofforestcity.com</span></h5>
+      Hours: 8:00 A.M. – 5:00 P.M., M-F</span></h5>
       <hr />
       <strong>Use zoom controls to navigate the map. Pinch & zoom and double tap to zoom have been disabled. With Zoning layer enabled, click to see zoning district, and double-click to see parcel owner.</strong>
       <hr />
@@ -263,8 +261,6 @@ function onEachZoningFeature(feature, layer) {
    }
 }
 
-
-
 function getZoneOpacity(zone)
   {
   return zone == 'RU' ? 0
@@ -278,37 +274,16 @@ function getZoneColor(zone)
     : zone == 'C-3' ? '#fb8072'
     : zone == 'M-1' ? '#d9d9d9'
     : zone == 'OI' ? '#80b1d3'
-    : zone == 'R-6' ? '#ffed6f'
+    : zone == 'R-6' ? '#ffffb3'
     : zone == 'R-8' ? '#ffed6f'
     : zone == 'R-15' ? '#ccebc5'
     : zone == 'R-20' ? '#b3de69'
     : zone == 'PRD' ? '#bc80bd' : '#fff';
   }
 
-//--show google imagery at higher zoom levels (removed - no API)
-// map.on('zoomend', function() {
-//  if (map.getZoom() > 18 && map.hasLayer(ortho)) {
-//    map.removeLayer(ortho);
-//    map.addLayer(ggle);
-//  }
-  //  if (map.getZoom() < 19 && map.hasLayer(ggle)) {
-//    map.removeLayer(ggle);
-//    map.addLayer(ortho);
-//  }
-// });
-  // map.on('baselayerchange', function() {
-  //  if (map.getZoom() > 18 && map.hasLayer(ggle)) {
-  //    map.removeLayer(ggle);
-  //  }
-  // });
-
-
-
-
-
 console.log('start map toolbar');
-//OVRDC Modern UI Toolbar
-//OVRDC New marker
+// OVRDC Modern UI Toolbar
+// OVRDC New marker
 var ovrdcMarker = L.icon({
   iconUrl: 'assets/images/ovrdc-marker.png',
   //shadowUrl: 'leaf-shadow.png',
@@ -326,7 +301,8 @@ var sidebar = L.control.sidebar('sidebar', {
 });
 sidebar.addTo(map);
 
-//Leaflet Search with OSM Geocode
+// Leaflet Search with OSM Geocode //
+// nominatim is not accurate with Forest City, this search may be removed or replaced in future //
 var osmsearch = new L.Control.Search({
   url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
   jsonpParam: 'json_callback',
@@ -340,6 +316,7 @@ var osmsearch = new L.Control.Search({
   textPlaceholder: 'Search Addresses',
   collapsed: false
 });
+
 osmsearch.addTo(map);
 var circle;
 var marker;
@@ -617,6 +594,12 @@ tileData.on('ready', function() {
   var pad = 0;
   tileLayer.addTo(map);
   tileLayer.setZIndex(10);
+
+  layerControl.addOverlay({
+    name: "Parcels",
+    //icon: '<i class="icon icon-water"></i>',
+    layer: tileLayer
+  });
 
 
 // geojson VT //
