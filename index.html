@@ -186,12 +186,12 @@ var ortho = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Wo
 
 var basemaps = [
   {
-    active: true,
+    active: false,
     name: "Satellite",
     layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}')
   },
   {
-    active: false,
+    active: true,
     name: "Street Map",
     layer: L.tileLayer('https://tile.thunderforest.com/transport/{z}/{x}/{y}.png?apikey=7b04830d899e4a91be1e0a117371e288')
   },
@@ -264,7 +264,7 @@ function onEachZoningFeature(feature, layer) {
 function getZoneOpacity(zone)
   {
   return zone == 'RU' ? 0
-                 : .7;
+                 : .5;
                }
 
 function getZoneColor(zone)
@@ -624,7 +624,7 @@ tileData.on('ready', function() {
 
     var features = tile.features;
 
-    ctx.strokeStyle = 'white';
+    ctx.strokeStyle = 'black';
 
     for (var i = 0; i < features.length; i++) {
       var feature = features[i],
